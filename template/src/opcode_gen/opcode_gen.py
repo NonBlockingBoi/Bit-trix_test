@@ -26,28 +26,24 @@ REGS = {
 # This is a test snippet of the Recursive Forward Substitution inner loop.
 # It assumes R1 points to x[n], R2 points to h[0], and R3 is the loop count.
 program = [
-    # --- PHASE 1: Initialization ---
-    ("CLR",      "R0", "00"), # Reset Accumulator: R0 = 0 (Prepares for y[n] - sum)
-    ("LD_INC",   "R3", "00"), # Load Loop Count: Fetch 'N' from RAM into R3 (Loop Control)
-    ("LD_INC",   "R0", "01"), # Initial Value: Load y[n] into R0 (Sum = y[n])
-
-    # --- PHASE 2: Convolution Summation (The Inner Loop) ---
-    # Formula: Sum = Sum - (h[k] * x[n-k])
-    ("LD_DEC",   "R1", "01"), # Fetch x[n-k]: Load sample from x-array, move ptr_x back
-    ("LD_INC",   "R2", "10"), # Fetch h[k]: Load previous h sample, move ptr_h forward
-    ("MAC",      "R1", "R2"), # Multiply-Accumulate: R0 = R0 + (R1 * R2) 
-                              # Note: If hardware MAC adds, result must be subtracted later.
+    # --- PHASE 1: Setup Constants ---
+    ("LD_INC",   "R2", "R2"),    # Load '1' from RAM into R2 (to use for decrementing R3)
+    ("CLR",      "R0", "00"),    # R0 = 0
+    ("LD_INC",   "R3", "R3"),    # Load Loop Count (N) into R3
+    
+    # --- PHASE 2: Inner Loop (Summation) ---
+    ("LD_DEC",   "R1", "R1"),    # PC=3: Fetch x[n-k], ptr_x--
+    ("LD_INC",   "R2", "R2"),    # PC=4: Fetch h[k], ptr_h++
+    ("MAC",      "R1", "R2"),    # PC=5: R0 = R0 + (R1 * R2)
     
     # --- PHASE 3: Loop Control ---
-    ("SUB",      "R3", "R_ONE"), # Decrement Counter: R3 = R3 - 1 (R_ONE must hold value 1)
-    ("LOOP",     "1100", ""),    # Branch: If R3 != 0, jump back 4 instructions (to LD_DEC)
-
-    # --- PHASE 4: Finalize h[n] ---
-    # Formula: h[n] = (y[n] - sum) / x[0]
-    ("LD_RAM",   "R1", "X_ZERO"),# Load Divisor: Fetch x[0] from fixed RAM address
-    ("DIV",      "R0", "R1"),    # Divide: R0 = R0 / R1 (Result is the final h[n])
-    ("ST_INC",   "R0", "00"),    # Store: Write h[n] to RAM, move ptr_h to next slot
-    ("HLT",      "00", "00"),    # Termination: Stop all CPU operations
+    ("SUB",      "R3", "R2"),    # PC=6: R3 = R3 - 1 (R2 holds the '1')
+    ("LOOP",     "1100", ""),    # PC=7: Jump back 4 instructions (1100) if R3 != 0
+    
+    # --- PHASE 4: Finalize ---
+    ("DIV",      "R0", "R1"),    # PC=8: Divide by x[0] (assumes x[0] was loaded into R1)
+    ("ST_INC",   "R0", "00"),    # PC=9: Store result h[n]
+    ("HLT",      "00", "00"),    # PC=10
 ]
 
 # ── Convert and print ────────────────────────────────────────────────────────
