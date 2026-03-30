@@ -10,7 +10,7 @@ module mac_unit #(parameter WIDTH = 8) (
 );
 
     // 1. Calculate the signed product
-    wire signed [2*WIDTH-1:0] product = a * b;
+    wire signed [2*WIDTH-1:0] product = $signed(a) * $signed(b);
 
     // 2. The Accumulator Register
     always @(posedge clk or posedge rst) begin
