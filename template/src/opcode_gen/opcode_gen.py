@@ -1,4 +1,3 @@
-# ── Custom LTI-Optimized ISA Opcodes ─────────────────────────────────────────
 # These perfectly match your instr_decoder.v
 OPCODES = {
     "NOP":    "0000",
@@ -24,7 +23,6 @@ REGS = {
     "00": "00", # Dummy filler for 1-operand instructions
 }
 
-# ── Write your program here ──────────────────────────────────────────────────
 # This is a test snippet of the Recursive Forward Substitution inner loop.
 # It assumes R1 points to x[n], R2 points to h[0], and R3 is the loop count.
 program = [
