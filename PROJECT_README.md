@@ -5,6 +5,7 @@
 ![Simulation](https://img.shields.io/badge/Simulation-Cocotb_%7C_Verilator-orange)
 
 A hyper-optimized, hardware-software co-designed 8-bit CPU built for the Bit-Trix 2026 competition at IIITDM Kancheepuram. 
+PS: The template file has the final code!
 
 This repository contains the Verilog RTL, the Python-based Cocotb testbench, and the custom Assembly instruction set designed specifically to compute the impulse response sequence `h[n]` of a discrete-time LTI system in the absolute minimum number of clock cycles.
 
