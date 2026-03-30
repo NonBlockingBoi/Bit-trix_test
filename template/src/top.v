@@ -113,6 +113,4 @@ always @(posedge clk or posedge rst) begin
             end
         end
     end
-    // do not touch this !!!!!
-
 endmodule
