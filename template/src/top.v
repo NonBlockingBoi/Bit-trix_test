@@ -75,7 +75,7 @@ module top (
     end
 
     // --- CORE DATAPATH & CONTROL ---
-    always @(posedge clk or posedge rst) begin
+always @(posedge clk or posedge rst) begin
         if (rst) begin
             pc <= 8'b0;
             regs[0] <= 8'b0; regs[1] <= 8'b0;
@@ -83,47 +83,35 @@ module top (
             halted <= 1'b0;
         end else if (!halted) begin
             
-            // 1. Program Counter & Branching Logic
-            if (halt) begin
-                halted <= 1'b1;
-            end else if (branch_en && regs[3] != 8'b0) begin
-                // JUMP backwards by sign-extending the 4-bit offset
+            // --- 1. PC & BRANCHING ---
+            if (halt) halted <= 1'b1;
+            else if (branch_en && regs[3] != 8'b0) begin
                 pc <= pc + {{4{current_instr[3]}}, current_instr[3:0]};
-                // HARDWARE OPTIMIZATION: Auto-decrement loop counter
-                regs[3] <= regs[3] - 1; 
+                regs[3] <= regs[3] - 1; // Auto-decrement loop counter
             end else begin
                 pc <= pc + 1;
             end
 
-            // 2. Standard Register Writeback
+            // --- 2. UNIFIED REGISTER WRITEBACK ---
+            // Prioritize Pointer updates vs ALU results
             if (clr_rd) begin
                 regs[rd_idx] <= 8'b0;
             end else if (reg_we) begin
-                regs[rd_idx] <= reg_in_sel ? ram_rdata : alu_out;
+                // Select input: RAM, ALU Result, or Pointer Update
+                if (reg_in_sel) begin
+                    regs[rd_idx] <= ram_rdata;
+                end else begin
+                    regs[rd_idx] <= alu_out;
+                end
             end
-
-            // 3. Hardware MAC Writeback
-            // MAC strictly forces accumulation into R0
-            if (alu_ctrl == 4'b0010) begin
-                regs[0] <= alu_out;
-            end
-
-            // 4. Pointer Auto-Increment/Decrement (For 1-Cycle RAM access)
-            if (ptr_inc) begin
+            
+            // Pointer increments must be handled carefully to not overwrite writeback
+            if (ptr_inc && (!reg_we || rs1_idx != rd_idx)) begin
                 regs[rs1_idx] <= regs[rs1_idx] + 1;
-            end else if (ptr_dec) begin
+            end else if (ptr_dec && (!reg_we || rs1_idx != rd_idx)) begin
                 regs[rs1_idx] <= regs[rs1_idx] - 1;
             end
-
         end
-    end
-
-    // ===================== CYCLE COUNTER =====================
-    always @(posedge clk or posedge rst) begin
-        if (rst)
-            cycle_count <= 256'b0;
-        else
-            cycle_count <= cycle_count + 1;
     end
     // do not touch this !!!!!
 
