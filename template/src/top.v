@@ -82,7 +82,7 @@ module top (
             // KEY CHANGE: Route the Hardware MAC result to the ALU output
             4'b0010: alu_out = mac_sat_out; 
             
-            4'b0011: alu_out = (val2 != 0) ? (regs[0] / val2) : 8'h00; 
+            4'b0011: alu_out = (val2 != 0) ? (mac_sat_out / val2) : 8'h00; 
             4'b0100: alu_out = val2;
             default: alu_out = 8'b0;
         endcase
