@@ -26,24 +26,22 @@ REGS = {
 # This is a test snippet of the Recursive Forward Substitution inner loop.
 # It assumes R1 points to x[n], R2 points to h[0], and R3 is the loop count.
 program = [
-    # --- PHASE 1: Setup Constants ---
-    ("LD_INC",   "R2", "R2"),    # Load '1' from RAM into R2 (to use for decrementing R3)
-    ("CLR",      "R0", "00"),    # R0 = 0
-    ("LD_INC",   "R3", "R3"),    # Load Loop Count (N) into R3
-    
-    # --- PHASE 2: Inner Loop (Summation) ---
-    ("LD_DEC",   "R1", "R1"),    # PC=3: Fetch x[n-k], ptr_x--
-    ("LD_INC",   "R2", "R2"),    # PC=4: Fetch h[k], ptr_h++
-    ("MAC",      "R1", "R2"),    # PC=5: R0 = R0 + (R1 * R2)
-    
+    # --- PHASE 1: Setup ---
+    ("LD_INC", "R0", "11"), # PC=0: Load constant '1' into R0 (R3 is pointer to constants)
+    ("MOV",    "R2", "00"), # PC=1: Move '1' to R2 for later use in SUB
+    ("CLR",    "R0", "00"), # PC=2: Reset Accumulator (R0=0, mac_clr=1)
+    ("LD_INC", "R3", "11"), # PC=3: Load Loop Count (N) into R3
+
+    # --- PHASE 2: Inner Loop ---
+    ("LD_DEC", "R0", "01"), # PC=4: Load x[n-k] into R0, Decr R1 (Pointer)
+    ("MOV",    "R3", "00"), # PC=5: Store x in R3 (temporary)
+    ("LD_INC", "R0", "10"), # PC=6: Load h[k] into R0, Incr R2 (Pointer)
+    ("MAC",    "R3", "00"), # PC=7: R0 = Saturated(R3 * R0) + Accumulator
+
     # --- PHASE 3: Loop Control ---
-    ("SUB",      "R3", "R2"),    # PC=6: R3 = R3 - 1 (R2 holds the '1')
-    ("LOOP",     "1100", ""),    # PC=7: Jump back 4 instructions (1100) if R3 != 0
-    
-    # --- PHASE 4: Finalize ---
-    ("DIV",      "R0", "R1"),    # PC=8: Divide by x[0] (assumes x[0] was loaded into R1)
-    ("ST_INC",   "R0", "00"),    # PC=9: Store result h[n]
-    ("HLT",      "00", "00"),    # PC=10
+    ("SUB",    "R3", "R2"), # PC=8: R3 = R3 - 1 (Using R2 which holds '1')
+    ("LOOP",   "1011", ""), # PC=9: Jump back 5 instructions (to PC=4)
+    ("HLT",    "00", "00")  # PC=10
 ]
 
 # ── Convert and print ────────────────────────────────────────────────────────
