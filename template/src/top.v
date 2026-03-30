@@ -76,13 +76,13 @@ module top (
 
     always @(*) begin
         case (alu_ctrl)
-            4'b0000: alu_out = val1 + val2;
-            4'b0001: alu_out = (val1 >= val2) ? (val1 - val2) : 8'h00; // Subtraction with saturation
+            4'b0000: alu_out = $signed(val1) + $signed(val2);
+            4'b0001: alu_out = $signed(val1) - $signed(val2); 
             
             // KEY CHANGE: Route the Hardware MAC result to the ALU output
             4'b0010: alu_out = mac_sat_out; 
             
-            4'b0011: alu_out = (val2 != 0) ? (mac_sat_out / val2) : 8'h00; 
+            4'b0011: alu_out = (val2 != 0) ? ($signed (mac_sat_out) / $signed(val2)) : 8'h00; 
             4'b0100: alu_out = val2;
             default: alu_out = 8'b0;
         endcase
@@ -113,9 +113,9 @@ module top (
             end
 
             // Pointer Logic...
-            if (ptr_inc && (!reg_we || rs1_idx != rd_idx)) begin
+            if (ptr_inc) begin
                 regs[rs1_idx] <= regs[rs1_idx] + 1;
-            end else if (ptr_dec && (!reg_we || rs1_idx != rd_idx)) begin
+            end else if (ptr_dec) begin
                 regs[rs1_idx] <= regs[rs1_idx] - 1;
             end
         end
